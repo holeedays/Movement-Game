@@ -10,12 +10,15 @@ public class BaseMovement : MonoBehaviour
     public float jumpForce;
     public float jumpCooldown;
     public float airMultiplier;
-    bool readyToJump;
+    private bool readyToJump = true;
 
     [Header("Ground Check")]
     public float playerHeight;
     public LayerMask Ground;
     //private bool grounded;
+
+    [Header("Wallrun Check")]
+    public bool wallrunning;
 
     [Header("Keybinds")]
     public KeyCode jumpKey = KeyCode.Space;
@@ -39,6 +42,7 @@ public class BaseMovement : MonoBehaviour
     private void Update()
     {
         GetInput();
+        SpeedControl();
 
         if (Grounded())
         {
@@ -57,8 +61,7 @@ public class BaseMovement : MonoBehaviour
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
 
-
-        if (Input.GetKey(jumpKey) && readyToJump && Grounded())
+        if (Input.GetKeyDown(jumpKey) && readyToJump && Grounded())
         {
             readyToJump = false;
 
@@ -69,9 +72,9 @@ public class BaseMovement : MonoBehaviour
 
 
         if (Input.GetKeyDown(sprintKey))
-            Walk();
-        else
             Sprint();
+        else
+            Walk();
 
 
     }
@@ -80,7 +83,12 @@ public class BaseMovement : MonoBehaviour
     {
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
-        rb.AddForce(moveDirection.normalized * moveSpeed * 100f * Time.deltaTime, ForceMode.Force);
+
+        if(Grounded()) 
+            rb.AddForce(moveDirection.normalized * moveSpeed * 100f * Time.deltaTime, ForceMode.Force);
+        else if (!Grounded())
+            rb.AddForce(moveDirection.normalized * moveSpeed * 100f * airMultiplier * Time.deltaTime, ForceMode.Force);
+
     }
 
     private void Sprint()
@@ -88,6 +96,17 @@ public class BaseMovement : MonoBehaviour
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
         rb.AddForce(moveDirection.normalized * moveSpeed * 125f * Time.deltaTime, ForceMode.Force);
+    }
+
+    private void SpeedControl()
+    {
+        Vector3 flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+
+        if (flatVel.magnitude > moveSpeed)
+        {
+            Vector3 limitedVel = flatVel.normalized * moveSpeed;
+            rb.linearVelocity = new Vector3(limitedVel.x, rb.linearVelocity.y, limitedVel.z);
+        }
     }
 
     private void Jump()
