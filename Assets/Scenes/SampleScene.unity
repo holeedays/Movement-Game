@@ -975,7 +975,8 @@ MonoBehaviour:
   downwardsRunKey: 306
   wallCheckDistance: 0.7
   minJumpHeight: 1.5
-  exitWallTime: 1
+  boundaryForce: 0
+  exitWallTime: 0.1
   useGravity: 1
   gravityCounterForce: 50
   orientation: {fileID: 698848512}
@@ -1201,8 +1202,8 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 410087041}
-  - {fileID: 832575519}
   - {fileID: 800062816}
+  - {fileID: 832575519}
   - {fileID: 1459535381}
   - {fileID: 640939110}
   - {fileID: 658044692}
