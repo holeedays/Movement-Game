@@ -30,8 +30,6 @@ public class WallRunMovement : MonoBehaviour
     public float wallCheckDistance;
     public float minJumpHeight;
 
-    public float boundaryForce;
-
     private RaycastHit leftWallHit;
     private RaycastHit rightWallHit;
 
@@ -96,18 +94,15 @@ public class WallRunMovement : MonoBehaviour
         downwardsRunning = Input.GetKey(downwardsRunKey);
 
         // State 1 - Wallrunning
-        if ((leftWall || rightWall) && AboveGround() && !exitingWall)
+        if ((leftWall || rightWall) && verticalInput > 0 && AboveGround() && !exitingWall)
         {
-            if (!bm.wallrunning && verticalInput > 0)
+            if (!bm.wallrunning)
                 StartWallRun();
-            else if (horizontalInput != 0 && verticalInput == 0)
-                CreateHorizontalBoundary();
-            
 
             // wall jump 
             if (Input.GetKeyDown(jumpKey))
-                WallJump();
-
+                WallJump();              
+            
             // wallrun timer
             if (wallRunTimer > 0) 
                 wallRunTimer -= Time.deltaTime;
@@ -163,7 +158,6 @@ public class WallRunMovement : MonoBehaviour
 
         Vector3 wallForward = Vector3.Cross(wallNormal, transform.up);
 
-        // for wall jumping 360 degrees
         if ((orientation.forward - wallForward).magnitude > (orientation.forward - -wallForward).magnitude)
             wallForward = -wallForward;
 
@@ -176,7 +170,7 @@ public class WallRunMovement : MonoBehaviour
         if (downwardsRunning)
             rb.linearVelocity = new Vector3(rb.linearVelocity.x, -wallClimbSpeed, rb.linearVelocity.z);
 
-        // push to wall force (prevents falling from curved walls)
+        // push to wall force
         if (!(leftWall && horizontalInput > 0) && !(rightWall && horizontalInput < 0))
             rb.AddForce(-wallNormal * 100, ForceMode.Force);
 
@@ -184,13 +178,6 @@ public class WallRunMovement : MonoBehaviour
         if (useGravity)
             rb.AddForce(transform.up * gravityCounterForce, ForceMode.Force);
 
-    }
-
-    private void CreateHorizontalBoundary() // prevents player from just holding horizontal input and sticking on the wall and not moving 
-    {
-        Vector3 wallNormal = rightWall ? rightWallHit.normal : leftWallHit.normal;
-
-        rb.AddForce(wallNormal * boundaryForce, ForceMode.Impulse);
     }
 
     private void StopWallRun()
@@ -210,7 +197,7 @@ public class WallRunMovement : MonoBehaviour
     private void WallJump()
     {
         // entering exit wall state
-        exitingWall = true;
+        exitingWall = false;
         exitWallTimer = exitWallTime;
 
 

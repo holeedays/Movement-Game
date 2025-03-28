@@ -975,8 +975,7 @@ MonoBehaviour:
   downwardsRunKey: 306
   wallCheckDistance: 0.7
   minJumpHeight: 1.5
-  boundaryForce: 0
-  exitWallTime: 0.1
+  exitWallTime: 1
   useGravity: 1
   gravityCounterForce: 50
   orientation: {fileID: 698848512}
