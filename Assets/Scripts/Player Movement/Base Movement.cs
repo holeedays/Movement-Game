@@ -34,7 +34,9 @@ public class BaseMovement : MonoBehaviour
     private Rigidbody rb;
 
     [Header("References")]
+
     public PlayerCamera pm;
+    public SoundManager sm;
 
     private void Start()
     {
@@ -69,11 +71,13 @@ public class BaseMovement : MonoBehaviour
 
             Jump();
 
+            sm.PlayJumpSound();
+
             Invoke(nameof(ResetJump), jumpCooldown);
         }
 
 
-        if (Input.GetKeyDown(sprintKey))
+        if (Input.GetKey(sprintKey))
             Sprint();
         else
             Walk();
@@ -123,6 +127,9 @@ public class BaseMovement : MonoBehaviour
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
 
         rb.AddForce(this.transform.up * jumpForce, ForceMode.Impulse);
+
+        //camera fx
+        pm.CameraJumpFX();
     }
 
     private void ResetJump()

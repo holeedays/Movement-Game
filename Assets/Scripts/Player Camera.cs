@@ -1,4 +1,5 @@
 using DG.Tweening;
+using System.Runtime.CompilerServices;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -15,10 +16,16 @@ public class PlayerCamera : MonoBehaviour
     private float xRotation;
     private float yRotation;
 
+    [Header("References")]
+
+    private Animator an;
+
     private void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        an = GetComponent<Animator>();
     }
 
     private void Update()
@@ -52,5 +59,10 @@ public class PlayerCamera : MonoBehaviour
     public void DoTilt(float zTilt)
     {
         transform.DOLocalRotate(new Vector3(0f, 0f, zTilt), 0.25f);
+    }
+
+    public void CameraJumpFX()
+    {
+        an.SetTrigger("Jump");
     }
 }

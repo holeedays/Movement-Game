@@ -7,6 +7,7 @@ TagManager:
   - Speed Down
   - Speed Up
   - Increase Gravity
+  - Restart
   layers:
   - Default
   - TransparentFX

@@ -21,8 +21,13 @@ public class WallRunMovement : MonoBehaviour
     public KeyCode jumpKey = KeyCode.Space;
     public KeyCode upwardsRunKey = KeyCode.LeftShift;
     public KeyCode downwardsRunKey = KeyCode.LeftControl;
+
+
     private bool upwardsRunning;
     private bool downwardsRunning;
+
+    private bool jumped;
+
     private float horizontalInput;
     private float verticalInput;
 
@@ -36,6 +41,7 @@ public class WallRunMovement : MonoBehaviour
     private RaycastHit rightWallHit;
 
     private bool leftWall, rightWall;
+    private bool wasOnLeftWall, wasOnRightWall;
 
     [Header("Exiting")]
     public float exitWallTime;
@@ -50,6 +56,8 @@ public class WallRunMovement : MonoBehaviour
     [Header("References")]
     public Transform orientation;
     public PlayerCamera cam;
+    public SoundManager sm;
+
     private BaseMovement bm;
     private Rigidbody rb;
 
@@ -96,17 +104,33 @@ public class WallRunMovement : MonoBehaviour
         downwardsRunning = Input.GetKey(downwardsRunKey);
 
         // State 1 - Wallrunning
-        if ((leftWall || rightWall) && AboveGround() && !exitingWall)
+
+            // checks if the jumpkey was pressed
+        if (Input.GetKeyDown(jumpKey))
+            jumped = true;
+
+        if ((leftWall || rightWall) && AboveGround() && !exitingWall && jumped) 
         {
             if (!bm.wallrunning && verticalInput > 0)
                 StartWallRun();
             else if (horizontalInput != 0 && verticalInput == 0)
-                CreateHorizontalBoundary();
+                CreateBoundary();
             
 
             // wall jump 
             if (Input.GetKeyDown(jumpKey))
+            {
                 WallJump();
+                sm.PlayJumpSound();
+
+                wasOnLeftWall = false;
+                wasOnRightWall = false;
+            }
+
+
+            // determine the wall we've previously been on
+            SaveWallState();
+
 
             // wallrun timer
             if (wallRunTimer > 0) 
@@ -123,6 +147,11 @@ public class WallRunMovement : MonoBehaviour
 
         else if (exitingWall)
         {
+            // we could be jumping when exitingwall or we're simply falling
+            // the bool "jumped" is not really meaning what it means
+
+            jumped = false;
+
             if (bm.wallrunning)
                 StopWallRun();
 
@@ -130,7 +159,31 @@ public class WallRunMovement : MonoBehaviour
                 exitWallTimer -= Time.deltaTime;
 
             if (exitWallTimer <= 0)
-                exitingWall = false;
+            {
+                if (leftWall && wasOnLeftWall && AboveGround())
+                {
+                    // push off the player from getting on wall
+                    CreateBoundary();
+                    return;
+                }
+                else if (rightWall && wasOnRightWall && AboveGround())
+                {
+                    CreateBoundary();
+                    return;
+                }
+                else
+                {
+                    exitingWall = false;
+                    jumped = true;
+
+                    // reset all saved wall states
+
+                    wasOnLeftWall = false;
+                    wasOnRightWall = false;
+                }
+            }
+                
+
         }
 
         // State 3 - None
@@ -168,7 +221,7 @@ public class WallRunMovement : MonoBehaviour
             wallForward = -wallForward;
 
         // forward force
-        rb.AddForce(wallForward * wallRunForce, ForceMode.Force);
+        rb.AddForce(wallForward * wallRunSpeed, ForceMode.Force);
 
         // upwards/downwards force
         if (upwardsRunning)
@@ -186,7 +239,7 @@ public class WallRunMovement : MonoBehaviour
 
     }
 
-    private void CreateHorizontalBoundary() // prevents player from just holding horizontal input and sticking on the wall and not moving 
+    private void CreateBoundary() // prevents player from just holding horizontal input and sticking on the wall and not moving 
     {
         Vector3 wallNormal = rightWall ? rightWallHit.normal : leftWallHit.normal;
 
@@ -204,8 +257,22 @@ public class WallRunMovement : MonoBehaviour
         cam.DoTilt(0);
     }
 
-    
 
+    // save the wall state: which wall were we on previously? technically this relies on the side our character
+    // is relative to the wall and not the uniqueness of the wall
+    private void SaveWallState()
+    {
+        if (leftWall)
+        {
+            wasOnLeftWall = true;
+            wasOnRightWall = false;
+        }
+        else if (rightWall)
+        {
+            wasOnRightWall = true;
+            wasOnLeftWall = false;
+        }
+    }
 
     private void WallJump()
     {
